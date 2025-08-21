@@ -18,7 +18,7 @@ NEV_KEYWORDS = [
     # Common brand/model tokens (extend as needed)
     "比亚迪", "腾势", "岚图", "蔚来", "小鹏", "理想", "广汽埃安", "极氪", "哪吒", "零跑",
     "宏光mini ev", "mini ev", "海豚", "海鸥", "海豹", "秦", "汉", "元", "宋", "唐",
-    "model 3", "model y", "AION","Aion"
+    "model 3", "model y", "AION","Aion","星纪元"
 ]
 
 # 3) 车型名→能源类型 的人工纠错映射
