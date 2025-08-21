@@ -20,7 +20,7 @@ INPUT_EXCEL = "/Users/yilin/Desktop/Python/Cluster_Analysis/vehicle_sales_2025_5
 OUTPUT_DIR = "./out_kproto"
 
 # 尝试的簇数列表（会逐个训练并记录 cost，选 cost 最小的 K）
-K_LIST = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+K_LIST = [ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 # ===================== FUNCTIONS（功能函数） =====================
 
