@@ -7,7 +7,6 @@ This data analysis project explores the potential pattern of the number of car r
 
 中国汽车2025年5月上牌量聚类分析项目旨在利用无监督学习方法从大量车辆上牌数据中发现潜在模式和类别。数据集包含了多种类型的特征，包括数值特征（如上牌量、价格等）和分类特征（如车辆类型、燃料类别、城市等）。由于特征类型多样，我们采用了两种聚类方法：基于 Gower 距离的层次聚类 和 K-Prototypes 聚类算法，分别针对混合数据类型的距离计算和直接聚类进行优化。项目流程包括数据预处理、使用两种方法分别进行聚类分析、选择适当的簇数，以及结果输出与简单可视化。通过这两种方法的对比，能够从不同角度刻画2025年5月汽车市场上牌数据的聚类模式，为进一步的市场细分和业务决策提供支持。
 
-This project analyzes the China vehicle registration data of May 2025 using unsupervised clustering methods to uncover latent patterns and groupings in the data. The dataset contains diverse feature types, including numerical features (e.g. registration counts, prices) and categorical features (e.g. vehicle segment, fuel type, city). To accommodate this mix of data types, two clustering approaches are employed: hierarchical clustering based on Gower distance and the K-Prototypes clustering algorithm, each tailored for mixed data but with different strategies (distance matrix vs. direct iterative clustering). The overall workflow includes data preprocessing, applying each clustering method, determining the optimal number of clusters, and outputting results with basic visualization. By using both methods, the analysis captures clustering patterns in the May 2025 vehicle market from different perspectives, providing insights for market segmentation and informed decision-making.
 
 聚类方法原理解释 | Clustering Methods and Principles
 
@@ -29,21 +28,6 @@ $$
 
 其中 d(i,j) 是样本 i 和 j 之间的距离（在本项目中为 Gower 距离）。平均链接方法能够综合考虑簇间所有样本的距离，从而生成相对均衡的簇。利用预先计算的 Gower 距离矩阵，本项目通过 AgglomerativeClustering 实现层次聚类，将 metric="precomputed" 与平均链接结合，以直接使用自定义距离矩阵。我们针对簇数 K 进行尝试（例如 K=2 到 9），使用轮廓系数(silhouette score)评估每种簇划分的质量，从中选取轮廓系数最高的 K 作为最佳聚类数量。层次聚类的结果包括每个样本的簇标签，以及基于簇的特征概况分析，如数值特征均值和主要分类特征分布等。此外，我们对距离矩阵采样应用经典多维尺度法 (MDS) 将高维距离映射到二维平面，以可视化聚类结果的整体结构。
 
-Hierarchical clustering with Gower distance is utilized to handle the mixed data types in our dataset. Gower’s distance provides a way to compute dissimilarity between two data points with numeric and categorical features. For any two samples i and j, the Gower computation considers each feature k individually and then aggregates the differences. Specifically, for feature k, the pairwise distance d^{(k)}(i,j) is defined as follows: if feature k is numeric, we use the normalized difference d^{(k)}(i,j) = \frac{|x_{ik} - x_{jk}|}{R_k}, where R_k is the range (max minus min) of feature k in the dataset. If feature k is categorical, then d^{(k)}(i,j) = 0 if x_{ik} = x_{jk} (no difference) or 1 if x_{ik} \neq x_{jk} (different category). Features with missing values are skipped for that pair. The overall Gower dissimilarity is the weighted average of feature-wise distances:
-
-$$
-d_{ij}^{\text{(Gower)}} = \frac{\sum_{k=1}^{p} w_k^{(ij)} , d^{(k)}(i,j)}{\sum_{k=1}^{p} w_k^{(ij)}} ,,
-$$
-
-where p is the total number of features and w_k^{(ij)} = 1 if both samples i and j have valid values on feature k (otherwise w_k^{(ij)} = 0). The resulting Gower distance lies between 0 and 1, with larger values indicating more dissimilar samples. In this project, we compute a full distance matrix using Gower distance for all sample pairs, providing a rigorous measure of dissimilarity for mixed data.
-
-The hierarchical clustering algorithm then proceeds in an agglomerative (bottom-up) fashion: each sample starts in its own cluster, and clusters are iteratively merged until the desired number of clusters K is reached. We use average linkage as the linkage criterion, meaning the distance between two clusters A and B is defined as the average of all pairwise distances between samples in A and those in B:
-
-$$
-d(A, B) = \frac{1}{|A| \cdot |B|} \sum_{i \in A} \sum_{j \in B} d(i,j) ,,
-$$
-
-where d(i,j) is the distance between sample i and j (in our case, the Gower distance). This average linkage method accounts for all members of each cluster when merging, producing more balanced clusters. In implementation, we use AgglomerativeClustering with metric="precomputed" and average linkage to directly supply our custom Gower distance matrix. We explore different cluster counts K (for example, 2 through 9) and evaluate each clustering result with the silhouette coefficient, which measures clustering quality. The number of clusters with the highest silhouette score is chosen as the optimal K. The hierarchical clustering yields a cluster label for each sample and allows further profiling of clusters (such as computing mean values of numerical features and the distribution of top categorical features in each cluster). Additionally, we apply Classical Multi-Dimensional Scaling (MDS) on a subset of the distance matrix to project the high-dimensional relationships into 2D for visualization, giving an overall picture of cluster structure in the data.
 
 K-Prototypes 聚类算法原理 | K-Prototypes Clustering Algorithm
 
@@ -62,22 +46,6 @@ K-Prototypes 算法的迭代过程与 K-Means 类似：
 4.	重复执行“分配簇”和“更新原型”步骤，直到簇分配不再变化或达到预定的迭代次数。算法收敛后得到稳定的簇划分结果。
 
 在本项目中，我们使用 kmodes 库提供的实现 (KPrototypes 类) 来对数据执行 K-Prototypes 聚类。在预处理阶段，我们将所有数值特征归一化到 [0,1] 区间，这样可以减少选择 \gamma 时的难度，因为所有特征的数值尺度相近。模型训练过程中，我们针对一组候选簇数 K 值（如 6 至 15）反复运行聚类，将 成本 (cost)（即簇内距离的总和）作为评价指标。随着 K 增大，聚类成本通常会下降，我们选择其中成本最小的簇数作为最佳 K。聚类完成后，每个样本获得一个簇标签，我们可以进一步提取每个簇的特征画像，包括数值特征的均值（本项目中特别保留“上牌量”以原始单位呈现簇均值）和每个类别特征中占比最高的几种类别。K-Prototypes 聚类方法能够高效地处理大规模数据，其直接迭代优化的机制使其在混合数据聚类中表现良好。
-
-The K-Prototypes algorithm is a partition-based clustering method designed for mixed-type data (containing both numeric and categorical features), introduced by Huang in 1998. It integrates the ideas of K-Means and K-Modes: for numeric features, it uses the same distance measure as K-Means (typically the squared Euclidean distance), and for categorical features, it uses a simple matching dissimilarity (distance is 1 if categories differ, 0 if they are the same), as employed in K-Modes. To combine the contributions of numeric and categorical differences into one unified distance metric, K-Prototypes introduces a weighting parameter \gamma that balances the influence of categorical mismatch relative to numeric distance. For a given data point x and a cluster prototype c, the K-Prototypes distance is defined as:
-
-$$
-d_{\text{kproto}}(x, c) = \sum_{j=1}^{m} (x_j - c_j)^2 ;+; \gamma \sum_{l=1}^{r} \mathbf{1}(x’_l \neq c’_l),,
-$$
-
-where the first summation runs over all m numeric features (using the squared difference for each), and the second summation runs over all r categorical features (with \mathbf{1}(\cdot) being an indicator that equals 1 if feature values differ and 0 if they are the same). Here, c_j and c’l represent the prototype’s values for the numeric feature j and categorical feature l, respectively. The parameter \gamma controls the relative weight of a categorical mismatch in the distance calculation, to ensure categorical features are not overshadowed by numeric features; \gamma can be tuned based on the scale of the data or set to a default heuristic. The clustering objective is to minimize the total within-cluster distance cost, i.e., the sum of d{\text{kproto}}(x_i, c_{\,cluster(i)}) for all points x_i and their assigned cluster prototypes.
-
-The iterative procedure of K-Prototypes mirrors that of K-Means:
-1.	Initialization: Choose K initial prototypes (each prototype consists of a numeric centroid and categorical mode for the cluster), either randomly or via improved methods suggested by Huang.
-2.	Cluster Assignment: Assign each data point to the cluster whose prototype has the smallest d_{\text{kproto}} distance to the point.
-3.	Prototype Update: For each cluster, update the prototype based on current members: compute the new numeric centroid (mean of each numeric feature in the cluster) and the new categorical mode (most frequent category for each categorical feature in the cluster).
-4.	Repeat the assignment and update steps until cluster memberships stabilize or a maximum number of iterations is reached. Upon convergence, the clusters and their prototypes are finalized.
-
-In this project, we leverage the KPrototypes class from the kmodes Python library to perform K-Prototypes clustering. During preprocessing, all numeric features are scaled to [0,1] using min-max normalization, which helps in choosing an appropriate \gamma since numeric ranges are standardized. We experiment with a range of candidate cluster counts K (e.g., 6 through 15) and run the clustering for each, evaluating using the cost (the sum of within-cluster distances) returned by the model. Typically, as K increases, the cost decreases; we select the number of clusters that yields the lowest cost among the tried values as the optimal K. After clustering, each data record is assigned a cluster label. We then derive cluster profiles, including the mean of each numeric feature for each cluster (with a special handling to present the “registration count” in its original unit rather than scaled) and the top categories by frequency for each categorical feature in each cluster. The K-Prototypes method is efficient for large datasets, and its direct iterative optimization makes it well-suited for clustering mixed-type data in this project.
 
 cluster_gower_pipeline.py 脚本函数详解 | Explanation of Functions in 
 cluster_gower_pipeline.py
