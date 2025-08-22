@@ -52,8 +52,6 @@ cluster_gower_pipeline.py
 
 该脚本实现了基于 Gower 距离和层次聚类的完整分析流程，从数据预处理到结果输出。下面对脚本中各主要函数的作用、输入输出、关键参数及在项目中的用途进行逐一说明。
 
-This script implements the full analysis pipeline using Gower distance and hierarchical clustering, covering data preprocessing through result output. The following is a detailed explanation of each major function in the script, including its purpose, inputs/outputs, key parameters, and role in the project.
-
 extract_price_mean(s)
 •	功能： 提取价格区间字符串中的数值并计算均值。如果输入字符串包含形如 “A-B” 的价格区间，则返回区间中两个数值的平均值；如果只包含单一数值，则直接返回该数值；如果无法提取数字则返回 NaN。该函数的实现通过正则表达式搜索字符串中的数值，并进行简单的字符串替换来处理可能存在的不同破折号字符。
 
